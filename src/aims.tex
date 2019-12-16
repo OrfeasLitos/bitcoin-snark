@@ -1,1 +1,27 @@
-\section{Proposal Aims}
+\section{Motivation \& Aims}
+  Currently Bitcoin~\cite{TODO:bitcoin} transactions store permanently the
+  pseudonymous addresses of transacting parties in the clear on the blockchain.
+  As shown by~\cite{TODO:chainalysis}, correlating this information with social
+  network graphs to deanonymize parties is practical and relatively cheap.
+  Avoiding the reuse of addresses does not protect from such attacks against
+  privacy.  Techniques proposed in the past such as
+  CoinJoin~\cite{TODO:coinjoin} need active user coordination, are prone to DoS
+  attacks and provide only heuristic privacy guarantees that can be violated by
+  a determined adversary~\cite{TODO:anticoinjoin}.
+
+  Zcash~\cite{TODO:zcash} is another blockchain with semantics similar to
+  Bitcoin. The main difference is that the former attempts to solve the issue of
+  privacy leakage by employing the use of SNARKs~\cite{TODO:snarks} for users
+  that wish to use them. At a high level, each such transaction carries a
+  zero-knowledge proof of the fact that it transfers coins between some parties.
+  This proof ensures that no new coins are created out of thin air, but does not
+  disclose neither the value of coins nor the addresses of the implicated
+  parties, creating thus one big anonymity set for all parties that have ever
+  transacted using zcash ``shielded''\footnote{we borrow the terms
+  ``transparent'' and ``shielded'' from Zcash.} addresses.
+
+  The aim of this proposal is to show that it is possible and practical to
+  integrate similar privacy capabilities in Bitcoin through a soft
+  fork~\cite{TODO:softfork}. Such an extension could bring stronger privacy to
+  Bitcoin, which is the cryptocurrency with the highest market
+  capitalization\footnote{\url{https://coinmarketcap.com}}.
