@@ -12,7 +12,7 @@
   Consider now the case in which \textit{Alice} wants to pay $c$ coins to
   $pk_B$, a public key controlled by \textit{Bob}. Using $sk_A$, $pk_B$ and
   $pk_{\textrm{change}}$ (the latter controlled by herself), she can produce a
-  SNARK that proves in zero knowledge that:
+  zk-SNARK that proves in zero knowledge that:
   \begin{itemize}
     \item she knows the secret key $sk_A$ corresponding to the public key
     $pk_A$, which is commited to in an as-of-yet unspent shielded transaction
@@ -22,25 +22,25 @@
     \item she transfers $c$ coins to $pk_B$ and $r$ coins to
     $pk_{\mathrm{change}}$.
   \end{itemize}
-  She can embed this SNARK in a $\textit{tx}_B$ that moves all but $f$ funds in
+  She can embed this zk-SNARK in a $\textit{tx}_B$ that moves all but $f$ funds in
   $pk_{\top}$ back to $pk_{\top}$. This results in $c$ coins owned by $pk_B$ and
   $r$ coins by $pk_{\mathrm{change}}$. Bitcoin nodes should verify the validity
-  of the SNARK and that the bulk of the funds remains in $pk_{\top}$.
+  of the zk-SNARK and that the bulk of the funds remains in $pk_{\top}$.
 
   When \textit{Alice} wants to move $d$ funds back to a ``transparent''
   address $pk_t$, she follows the same steps as above, with the difference that
   the third zero knowledge bullet is omitted and $d$ funds are moved to $pk_t$
   instead of $pk_{\top}$. In this case, Bitcoin nodes should only check the
-  validity of the SNARK.
+  validity of the zk-SNARK.
 
-  The SNARK system we choose is \TODO{QAP}~\cite{TODO:qap}. For extra
-  flexibility, we may demand that all shielded transactions contain the hash of
-  $\mathit{tx}_{\mathrm{CRS}}$ so that other independent CRSs can be defined as
-  well.
+  The zk-SNARK system we choose is~\cite{DBLP:conf/eurocrypt/Groth16}.  For
+  extra flexibility, we may demand that all shielded transactions contain the
+  hash of $\mathit{tx}_{\mathrm{CRS}}$ so that other independent CRSs can be
+  defined as well.
 
   As this is a soft fork, full nodes with old software will accept all
   transactions described above as valid. They will also accept transactions with
-  fake SNARKs, so every node is advised to update. In order for these rules to
+  fake zk-SNARKs, so every node is advised to update. In order for these rules to
   be enforced, a supermajority of the mining power should have such capability
   activated. An update strategy similar to that used for enabling
-  SegWit~\cite{TODO:segwit} can be employed.
+  SegWit\footnote{\url{https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki}} can be employed.

@@ -1,19 +1,19 @@
 \section{Upgrading approach}
   There are various update mechanisms available in Bitcoin (especially after
-  Taproot~\cite{TODO:taproot}). We now discuss some available options. All
-  options below can be extended to include the hash of
-  $\mathit{tx}_{\mathrm{CRS}}$.
+  Taproot\footnote{\url{https://github.com/sipa/bips/blob/bip-schnorr/bip-taproot.mediawiki}}).
+  We now discuss some available options. All options below can be extended to
+  include the hash of $\mathit{tx}_{\mathrm{CRS}}$.
   \subsection{New SegWit version}
     Transactions with SegWit version 3 (or whichever is the lowest unused
     version number) are all accepted by current nodes. We could demand that
-    transactions with SNARKs carry this a version number at least equal to this.
+    transactions with zk-SNARKs carry this a version number at least equal to this.
     We are largely free to define the syntax and semantics of such transactions
     as we please, so we can copy the Zcash semantics.
   \subsection{New opcode}
     Taproot defines a mechanism for specifying semantics for new opcodes. We can
-    define \texttt{OP\_SNARK} that reads the next data field as a SNARK. This
-    way the SNARK semantics can be combined with existing Bitcoin script.
+    define \texttt{OP\_zk-SNARK} that reads the next data field as a zk-SNARK. This
+    way the zk-SNARK semantics can be combined with existing Bitcoin script.
   \subsection{New Taproot address type}
     Taproot allows for the definition of alternative semantics in the location
-    currently occupied by public keys. We could replace this space with a SNARK
-    and use the ``annex'' field for additional SNARK bits if needed.
+    currently occupied by public keys. We could replace this space with a zk-SNARK
+    and use the ``annex'' field for additional zk-SNARK bits if needed.
