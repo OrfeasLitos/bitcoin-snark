@@ -1,46 +1,78 @@
 \section{Proposal}
-  Initially, a special \texttt{OP\_RETURN} transaction,
-  $\mathit{tx}_{\mathrm{CRS}}$, is added to the blockchain. It contains a CRS,
-  which is generated in a trusted manner, e.g.  similar to how the CRS in Zcash
-  was. A specific bitcoin public key $pk_{\top}$ is designated in this process,
-  which will contain all the ``shielded'' funds.
+  Existing zk-SNARK systems need a \emph{structured reference string} (SRS) to
+  generate and verify proofs. This string is public information, but its
+  generation must be carried out by an honest party: if the Adversary is the one
+  that generates the SRS, then it can use information from this generation
+  procedure to later create valid proofs for false statements, completely
+  subverting the zk-SNARK security.
 
-  Subsequently, \textit{Alice} can generate a private bitcoin keypair $(pk_A,
-  sk_A)$ and create a transaction $\textit{tx}_A$ that moves $c + r + f$ coins
-  to $pk_{\top}$ and contains a randomized commitment to $pk_A$.
+  One way to alleviate this problem is to make the SRS \emph{updateable}, i.e.
+  to allow the SRS to change throughout the lifetime of the zk-SNARK system.
+  Each update would be based on the previous in a manner that ensures that even
+  if a single updater has been honest, then no one can generate valid proofs to
+  false statements. Such a capability is provided by
+  SONIC~\cite{DBLP:conf/ccs/MallerBKM19}, we therefore choose this as our
+  zk-SNARK system.
 
-  Consider now the case in which \textit{Alice} wants to pay $c$ coins to
-  $pk_B$, a public key controlled by \textit{Bob}. Using $sk_A$, $pk_B$ and
-  $pk_{\textrm{change}}$ (the latter controlled by herself), she can produce a
-  zk-SNARK that proves in zero knowledge that:
+  Two new opcodes are added to the Bitcoin Script: \texttt{OP\_SRS} and
+  \texttt{OP\_SNARK}. To simplify the description and avoid a number of
+  complications, we require that if one of these opcodes appears in a script, it
+  has to be the only opcode in that script, otherwise the transaction is
+  invalid. Further investigation is needed to determine whether it is possible
+  to lift this limitation.
+
+  \texttt{OP\_SRS} generates a new or updates an existing SRS, depending on its
+  arguments. If followed by exactly two data fields, the opcode is a generation
+  of a new SRS. The first data field contains the new SRS and the second the
+  proof of its correctness.
+
+  If the opcode is followed by exactly three data fields, the opcode is an
+  update of an existing SRS. The first data field contains the
+  outpoint\footnote{reference to a specific transaction output} that carries the
+  previous SRS, the second contains the new SRS and the third the correctness
+  proof of the update.
+  % TODO: should we input/read chain for proofs?
+
+  \texttt{OP\_SNARK} must be followed by exactly two data fields: An outpoint
+  that references the SRS and a zk-SNARK that is valid based on the specified
+  SRS and all previous proofs done under this SRS (and its previous versions).
+  Within the zk-SNARK system, a player \emph{Alice} can make the following
+  operations in zero knowledge:
   \begin{itemize}
-    \item she knows the secret key $sk_A$ corresponding to the public key
-    $pk_A$, which is commited to in an as-of-yet unspent shielded transaction
-    $\textit{tx}_A$,
-    \item the output of $\textit{tx}_A$ contains exactly the funds transferred
-    ($c + r$) plus fees $f$,
-    \item she transfers $c$ coins to $pk_B$ and $r$ coins to
-    $pk_{\mathrm{change}}$.
+    \item Pay in normal bitcoins to a hidden public key. The SNARK should prove
+    that the hidden public key now owns these private bitcoins. This can only
+    happen by a transaction that transfers bitcoins to the specified SRS.
+    \item Transfer private bitcoins to another hidden public key. The SNARK must
+    prove that \emph{Alice} knows the secret key corresponding to a hidden
+    public key that owns enough private bitcoins. Such transfers can only happen
+    by transactions that move $0$ coins from the SRS to the SRS\footnote{miner
+    fees and dust limits should be taken into account here.}.
+    \item Convert private bitcoins to normal ones and move them from a hidden to
+    a conventional public key. The SNARK must prove that \emph{Alice} knows the
+    secret key corresponding to a hidden public key that owns enough private
+    bitcoins. Such transfers can only happen by transactions that move the
+    specified number of coins from the SRS to the conventional public key.
   \end{itemize}
-  She can embed this zk-SNARK in a $\textit{tx}_B$ that moves all but $f$ funds in
-  $pk_{\top}$ back to $pk_{\top}$. This results in $c$ coins owned by $pk_B$ and
-  $r$ coins by $pk_{\mathrm{change}}$. Bitcoin nodes should verify the validity
-  of the zk-SNARK and that the bulk of the funds remains in $pk_{\top}$.
 
-  When \textit{Alice} wants to move $d$ funds back to a ``transparent''
-  address $pk_t$, she follows the same steps as above, with the difference that
-  the third zero knowledge bullet is omitted and $d$ funds are moved to $pk_t$
-  instead of $pk_{\top}$. In this case, Bitcoin nodes should only check the
-  validity of the zk-SNARK.
+  As a precaution against malicious SRSs, full nodes should furthermore keep
+  track of the number of coins paid into and withdrawn from a particular SRS. In
+  order to be valid, the transaction containing the zk-SNARK must withdraw at
+  most as much coins as the ones remaining in the used SRS. This is a simple
+  safeguard that ensures the firewall property~\cite{DBLP:conf/sp/GaziKZ19},
+  i.e. that no bitcoins can be generated out of thin air.
 
-  The zk-SNARK system we choose is~\cite{DBLP:conf/eurocrypt/Groth16}.  For
-  extra flexibility, we may demand that all shielded transactions contain the
-  hash of $\mathit{tx}_{\mathrm{CRS}}$ so that other independent CRSs can be
-  defined as well.
+  Taproot\footnote{\url{https://github.com/sipa/bips/blob/bip-schnorr/bip-taproot.mediawiki}}
+  defines a mechanism for specifying semantics for new opcodes, which we can use
+  to introduce \texttt{OP\_SRS} and \texttt{OP\_SNARK}. In case some of the
+  above requirements cannot be enforced through this upgrade mechanism (e.g. the
+  requirement of a single zk-SNARK opcode per script), we can leverage other
+  update paths, such as increasing the SegWit version or using the ``annex''
+  field that Taproot provides.
 
   As this is a soft fork, full nodes with old software will accept all
   transactions described above as valid. They will also accept transactions with
-  fake zk-SNARKs, so every node is advised to update. In order for these rules to
-  be enforced, a supermajority of the mining power should have such capability
-  activated. An update strategy similar to that used for enabling
-  SegWit\footnote{\url{https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki}} can be employed.
+  fake zk-SNARKs, so every node is advised to update. In order for these rules
+  to be enforced, a supermajority of the mining power should have such
+  capability activated. An update strategy similar to that used for enabling
+  SegWit\footnote{\url{https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki}}
+  can be employed.
