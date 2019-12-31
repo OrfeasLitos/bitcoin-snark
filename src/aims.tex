@@ -1,31 +1,30 @@
 \section{Motivation \& Aims}
+  % TODO: stop referring to Zcash, cite Kachina
   Currently Bitcoin~\cite{bitcoin} transactions store permanently the
   pseudonymous addresses of transacting parties in the clear on the blockchain.
-  As shown by~\cite{DBLP:conf/fc/AndroulakiKRSC13}, correlating this
-  information with social network graphs to deanonymize parties is practical and
-  relatively cheap.  Avoiding the reuse of addresses does not protect from such
-  attacks against privacy.  Techniques proposed in the past such as
+  As shown by~\cite{DBLP:conf/fc/AndroulakiKRSC13}, correlating this information
+  with social network graphs to deanonymize parties is practical and relatively
+  cheap. Avoiding the reuse of addresses does not protect from such attacks
+  against privacy. Techniques proposed in the past such as
   CoinJoin~\cite{DBLP:conf/trustcom/MaurerNF17} need active user coordination,
   are prone to DoS attacks and provide only heuristic privacy guarantees that
   can be violated by a determined adversary.
 
-  Zcash~\cite{DBLP:conf/sp/Ben-SassonCG0MTV14,zcash-protocol} is another
-  blockchain with semantics similar to Bitcoin. The main difference is that the
-  former attempts to solve the issue of privacy leakage by employing the use of
-  zk-SNARKs~\cite{DBLP:conf/stoc/BitanskyCCT13,DBLP:conf/eurocrypt/Groth16} for
-  users that wish to use them. At a high level, each such transaction carries a
-  zero-knowledge proof of the fact that it transfers coins between some parties.
-  This proof ensures that no new coins are created out of thin air, but does not
-  disclose neither the value of coins nor the addresses of the implicated
-  parties, creating thus one big anonymity set for all parties that have ever
-  transacted using zcash ``shielded''\footnote{we borrow the terms
-  ``transparent'' and ``shielded'' from Zcash.} addresses.
-
-  Drawing inspiration from Zcash but following a different approach, the aim of
-  this proposal is to enable the use of zk-SNARKs in Bitcoin through a soft
-  fork~\cite{DBLP:conf/fc/ZamyatinSJSWK18}. Such an extension could bring
-  stronger privacy capabilities to Bitcoin, which is currently the
-  cryptocurrency with the highest market
-  capitalization\footnote{\url{https://coinmarketcap.com}}. This can be achieved
-  with minimal changes to Bitcoin: the new feature will be available through two
-  new Bitcoin Script\footnote{\url{https://en.bitcoin.it/wiki/Script}} opcodes.
+  Existing work~\cite{DBLP:conf/sp/Ben-SassonCG0MTV14,zcash-protocol,kachina}
+  shows that it is possible and practical to integrate zero-knowledge proof
+  systems into blockchains. The aim of this proposal is to enable the use of
+  zk-SNARKs in Bitcoin. Such an extension could bring a number of useful
+  features to Bitcoin, which is currently the cryptocurrency with the highest
+  market capitalization\footnote{\url{https://coinmarketcap.com}}.
+  \begin{itemize}
+    \item stronger privacy guarantees,
+    \item extension of the bitcoin scripting language in a sandboxed manner,
+    \item a stronger layer-1 system for enabling arbitrary layer-2
+    protocols~\cite{DBLP:conf/sss/DeckerW15,lightning,perun,DBLP:conf/systor/LindNEKPS18,sprites}
+    for nearly instant and low-fee smart contract capabilities in a trustless
+    manner.
+  \end{itemize}
+  The above can be achieved with minimal changes to Bitcoin: the new feature
+  will be available through four new Bitcoin
+  Script\footnote{\url{https://en.bitcoin.it/wiki/Script}} opcodes that can be
+  introduced through a soft fork~\cite{DBLP:conf/fc/ZamyatinSJSWK18}

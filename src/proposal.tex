@@ -14,45 +14,54 @@
   SONIC~\cite{DBLP:conf/ccs/MallerBKM19}, we therefore choose this as our
   zk-SNARK system.
 
-  Two new opcodes are added to the Bitcoin Script: \texttt{OP\_SRS} and
-  \texttt{OP\_SNARK}. To simplify the description and avoid a number of
-  complications, we require that if one of these opcodes appears in a script, it
-  has to be the only opcode in that script, otherwise the transaction is
+  We propose to add four new opcodes to the Bitcoin Script:
+  \texttt{OP\_SRS\_CREATE}, \texttt{OP\_SRS\_UPDATE}, \texttt{OP\_SNARK\_CREATE}
+  and \texttt{OP\_SNARK\_UPDATE}. To simplify the description and avoid a number
+  of complications, we require that if one of these opcodes appears in a script,
+  it has to be the only opcode in that script, otherwise the transaction is
   invalid. Further investigation is needed to determine whether it is possible
   to lift this limitation.
 
-  \texttt{OP\_SRS} generates a new or updates an existing SRS, depending on its
-  arguments. If followed by exactly two data fields, the opcode is a generation
-  of a new SRS. The first data field contains the new SRS and the second the
-  proof of its correctness.
+  \texttt{OP\_SRS\_CREATE} generates a new SRS. It can be followed by either two
+  or three data fields. The first data field contains the new SRS, the second
+  the proof of its correctness and the optional third field contains (a
+  reference to) the description of an NP relation $R$ that all SNARKs under this
+  SRS must observe. If present, the last field defines a state machine within
+  which the SNARK system will operate.
 
-  If the opcode is followed by exactly three data fields, the opcode is an
-  update of an existing SRS. The first data field contains the
-  outpoint\footnote{reference to a specific transaction output} that carries the
-  previous SRS, the second contains the new SRS and the third the correctness
-  proof of the update.
-  % TODO: should we input/read chain for proofs?
+  \texttt{OP\_SRS\_UPDATE} updates an existing SRS. It must be followed by
+  exactly three data fields. The first data field contains the
+  outpoint\footnote{reference to a specific transaction output already in the
+  ledger} that carries the previous SRS, the second contains the new SRS and the
+  third the correctness proof of the update.
 
-  \texttt{OP\_SNARK} must be followed by exactly two data fields: An outpoint
-  that references the SRS and a zk-SNARK that is valid based on the specified
-  SRS and all previous proofs done under this SRS (and its previous versions).
-  Within the zk-SNARK system, a player \emph{Alice} can make the following
-  operations in zero knowledge:
-  \begin{itemize}
-    \item Pay in normal bitcoins to a hidden public key. The SNARK should prove
-    that the hidden public key now owns these private bitcoins. This can only
-    happen by a transaction that transfers bitcoins to the specified SRS.
-    \item Transfer private bitcoins to another hidden public key. The SNARK must
-    prove that \emph{Alice} knows the secret key corresponding to a hidden
-    public key that owns enough private bitcoins. Such transfers can only happen
-    by transactions that move $0$ coins from the SRS to the SRS\footnote{miner
-    fees and dust limits should be taken into account here.}.
-    \item Convert private bitcoins to normal ones and move them from a hidden to
-    a conventional public key. The SNARK must prove that \emph{Alice} knows the
-    secret key corresponding to a hidden public key that owns enough private
-    bitcoins. Such transfers can only happen by transactions that move the
-    specified number of coins from the SRS to the conventional public key.
-  \end{itemize}
+  \texttt{OP\_SNARK\_CREATE} moves some normal bitcoins to a private context. It
+  must be followed by three or four data fields: An outpoint that references the
+  SRS, (a reference to) the description of an NP relation $R$ that all
+  subsequent SNARKS that use these coins must obey -- needed only if the
+  relevant \texttt{OP\_SRS\_CREATE} did not specify such a relation -- an
+  initial statement $x$ and a zk-SNARK that proves that this is a valid
+  statement (i.e., $\exists w: R(x, w) = 1$). Similarly to
+  \texttt{OP\_SRS\_CREATE}, the relation defines the semantics of the state
+  machine to be used by subsequent SNARKs.
+
+  \texttt{OP\_SNARK\_UPDATE} updates the state of the private state machine with
+  a new valid statement. Following Bitcoin semantics, It must consume the
+  outputs of the transactions that contain the previous valid statements $x_1,
+  \dots, x_n$. It must be followed by exactly three data fields: An outpoint
+  that references the SRS, a statement $x'$ and a zk-SNARK that proves that the
+  previous statements together with the new statement obey the overarching
+  relation (i.e., $\exists w: R(x_1 \wedge \dots \wedge x_n \wedge x', w) = 1$).
+  The relation $R$ can be designed so that, under particular circumstances,
+  e.g., when the contract is resolved, $x'$ can be a Bitcoin output that can be
+  consumed by the current Bitcoin Script, therefore converting the private coins
+  back to normal bitcoins.
+
+  A potential specific application of the above system is the reproduction of
+  Zcash~\cite{DBLP:conf/sp/Ben-SassonCG0MTV14,zcash-protocol} capabilities. By
+  defining a proper relation during the definition of a new SRS, we can allow
+  transactions that provide the same privacy guarantees as ``shielded'' Zcash
+  transactions do.
 
   As a precaution against malicious SRSs, full nodes should furthermore keep
   track of the number of coins paid into and withdrawn from a particular SRS. In
@@ -63,11 +72,11 @@
 
   Taproot\footnote{\url{https://github.com/sipa/bips/blob/bip-schnorr/bip-taproot.mediawiki}}
   defines a mechanism for specifying semantics for new opcodes, which we can use
-  to introduce \texttt{OP\_SRS} and \texttt{OP\_SNARK}. In case some of the
-  above requirements cannot be enforced through this upgrade mechanism (e.g. the
-  requirement of a single zk-SNARK opcode per script), we can leverage other
-  update paths, such as increasing the SegWit version or using the ``annex''
-  field that Taproot provides.
+  to introduce the three new opcodes. In case some of the above requirements
+  cannot be enforced through this upgrade mechanism (e.g. the requirement of a
+  single zk-SNARK opcode per script), we can leverage other update paths, such
+  as increasing the SegWit version or using the ``annex'' field that Taproot
+  provides.
 
   As this is a soft fork, full nodes with old software will accept all
   transactions described above as valid. They will also accept transactions with
