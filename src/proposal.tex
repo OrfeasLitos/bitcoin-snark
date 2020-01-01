@@ -57,6 +57,14 @@
   consumed by the current Bitcoin Script, therefore converting the private coins
   back to normal bitcoins.
 
+  We note that the SNARK relation can be specified either at the SRS creation or
+  during the conversion of bitcoins to private coins. In the former case coins
+  that are converted in separate transactions can freely interact, but the
+  relation is tied with the specific SRS (or any of its updates) and can never
+  change. In the second case on the other hand, a single SRS can cater to
+  various relations, but coins converted in various transactions cannot
+  interact.
+
   A potential specific application of the above system is the reproduction of
   Zcash~\cite{DBLP:conf/sp/Ben-SassonCG0MTV14,zcash-protocol} capabilities. By
   defining a proper relation during the definition of a new SRS, we can allow
